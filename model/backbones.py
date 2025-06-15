@@ -1,0 +1,159 @@
+import torch
+import torch.nn as nn
+from model.classifiers import SingleLinearClassifier, ConvClassifier
+from model.shared import ConvBnRelu, ResNorm, AdaResNorm, BroadcastBlock, TimeFreqSepConvolutions
+
+class _BaseBackbone(nn.Module):
+    """ Base Module for backbones. """
+
+class DCASEBaselineCnn3(_BaseBackbone):
+    """
+    Previous baseline system of the task 1 of DCASE Challenge.
+    A simple CNN consists of 3 conv layers and 2 linear layers.
+
+    Note: Kernel size of the Max-pooling layers need to be changed for adapting to different size of inputs.
+
+    Args:
+        in_channels (int): Number of input channels.
+        num_classes (int): Number of output classes.
+        base_channels (int): Number of base channels.
+        kernel_size (int): Kernel size of convolution layers.
+        dropout (float): Dropout rate.
+    """
+
+    def __init__(self, in_channels: int = 1, num_classes: int = 10, base_channels: int = 16, kernel_size: int = 7,
+                 dropout: float = 0.3):
+        super(DCASEBaselineCnn3, self).__init__()
+        self.conv1 = ConvBnRelu(in_channels, base_channels, kernel_size, padding=(kernel_size - 1) // 2, bias=True)
+        self.conv2 = ConvBnRelu(base_channels, base_channels, kernel_size, padding=(kernel_size - 1) // 2, bias=True)
+        self.conv3 = ConvBnRelu(base_channels, base_channels * 2, kernel_size, padding=(kernel_size - 1) // 2,
+                                bias=True)
+        
+        self.dropout1 = nn.Dropout(p=dropout)
+        self.dropout2 = nn.Dropout(p=dropout)
+        # Adjust the kernel of max_pooling util the output shape is (F=2, T=1)
+        self.max_pooling1 = nn.MaxPool2d((5, 5))
+        self.max_pooling2 = nn.MaxPool2d((4, 10))
+        self.flatten = nn.Flatten()
+        self.linear1 = nn.Linear(base_channels * 4, 100)
+        self.relu = nn.ReLU()
+        self.dropout3 = nn.Dropout(p=dropout)
+        self.linear2 = nn.Linear(100, num_classes)
+        self.num_classes = num_classes
+
+    def forward(self, x):
+        # print('INPUT SHAPE:', x.shape)
+        x = self.conv1(x) #expected example shape: (B, 1, 40, 500)
+        
+        # print('CONV2 INPUT SHAPE:', x.shape)
+        x = self.conv2(x) #expected shape: (B, 16, 40, 500)
+        x = self.max_pooling1(x) #expected shape: (B, 16, 8, 100 )
+        x = self.dropout1(x)#
+
+        # print('CONV3 INPUT SHAPE:', x.shape)
+        x = self.conv3(x)#expected shape: (B, 32, 8, 100)
+        x = self.max_pooling2(x) #expected shape: (B, 32, 2, 10)
+        x = self.dropout2(x)
+
+        # print('FLATTEN INPUT SHAPE:', x.shape)
+        x = self.flatten(x) #expected shape: (B, 64)
+
+        # print('LINEAR INPUT SHAPE:', x.shape)
+        x = self.linear1(x)
+        x = self.relu(x)
+        x = self.dropout3(x)
+        x = self.linear2(x)
+        # print('OUTPUT SHAPE:', x.shape)
+        return x
+
+
+
+class TFSepNet(_BaseBackbone):
+    """
+    Implementation of TF-SepNet-64, based on Time-Frequency Separate Convolutions. Check more details at:
+    https://ieeexplore.ieee.org/abstract/document/10447999 and
+    https://dcase.community/documents/challenge2024/technical_reports/DCASE2024_Cai_61_t1.pdf
+
+    Args:
+        in_channels (int): Number of input channels.
+        num_classes (int): Number of output classes.
+        base_channels (int): Number of base channels that controls the complexity of model.
+        depth (int): Network depth with two options: 16 or 17. When depth = 17, an additional Max-pooling layer is inserted before the last TF-SepConvs black.
+        kernel_size (int): Kernel size of each convolutional layer in TF-SepConvs blocks.
+        dropout (float): Dropout rate.
+    """
+
+    def __init__(self, in_channels: int = 1, num_classes: int = 10, base_channels: int = 64, depth: int = 17,
+                 kernel_size: int = 3, dropout: float = 0.1, pretrained_ckpt: str | None = None, 
+                 load_classifier: bool = True, freeze_backbone: bool = True):  # ← Add this parameter
+        super().__init__()
+        assert base_channels % 2 == 0, "Base_channels should be divisible by 2."
+        self.dropout = dropout
+        self.kernel_size = kernel_size
+
+        # Two settings of the depth. ``17`` have an additional Max-pooling layer before the final block of TF-SepConvs.
+        cfg = {
+            16: ['N', 1, 1, 'N', 'M', 1.5, 1.5, 'N', 'M', 2, 2, 'N', 2.5, 2.5, 2.5, 'N'],
+            17: ['N', 1, 1, 'N', 'M', 1.5, 1.5, 'N', 'M', 2, 2, 'N', 'M', 2.5, 2.5, 2.5, 'N'],
+        }
+
+        self.conv_layers = nn.Sequential(ConvBnRelu(in_channels, base_channels // 2, 3, stride=2, padding=1),
+                                         ConvBnRelu(base_channels // 2, 2 * base_channels, 3, stride=2, padding=1,
+                                                    groups=base_channels // 2))
+        # Compute the number of channels for each layer.
+        layer_config = [int(i * base_channels) if not isinstance(i, str) else i for i in cfg[depth]]
+        self.middle_layers = self._make_layers(base_channels, layer_config)
+        # Get the index of channel number for the cla_layer.
+        last_num_index = -1 if not isinstance(layer_config[-1], str) else -2
+        # 1x1 convolution layer as the cla_layer.
+        self.classifier = ConvClassifier(layer_config[last_num_index], num_classes)
+        if pretrained_ckpt is not None:
+            # Load pretrained weights
+            if pretrained_ckpt.endswith('.ckpt'):
+                state_dict = torch.load(pretrained_ckpt, map_location='cpu')['state_dict']
+                # Remove 'backbone.' prefix
+                state_dict = {k.replace('backbone.', ''): v for k, v in state_dict.items() 
+                             if k.startswith('backbone.')}
+            else:
+                state_dict = torch.load(pretrained_ckpt, map_location='cpu')
+            
+            if not load_classifier:
+                state_dict = {k: v for k, v in state_dict.items() if not k.startswith('classifier')}
+            
+            self.load_state_dict(state_dict, strict=False)
+            
+            # ← Modify this logic
+            if freeze_backbone:
+                # Freeze backbone, only train classifier
+                for p in self.parameters():
+                    p.requires_grad = False
+                for p in self.classifier.parameters():
+                    p.requires_grad = True
+                print("Backbone frozen - only classifier is trainable")
+            else:
+                # Unfreeze all parameters
+                for p in self.parameters():
+                    p.requires_grad = True
+                print("Backbone unfrozen - all parameters are trainable")
+
+    def _make_layers(self, width: int, layer_config: list):
+        layers = []
+        vt = width * 2
+        for v in layer_config:
+            if v == 'N':
+                layers += [ResNorm(channels=vt)]
+            elif v == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            elif v != vt:
+                layers += [TimeFreqSepConvolutions(vt, v, self.kernel_size, self.dropout)]
+                vt = v
+            else:
+                layers += [TimeFreqSepConvolutions(vt, vt, self.kernel_size, self.dropout)]
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv_layers(x)
+        x = self.middle_layers(x)
+        x = self.classifier(x)
+        return x
+

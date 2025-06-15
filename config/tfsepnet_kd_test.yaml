@@ -1,0 +1,60 @@
+### Test Single Device A Model ###
+trainer:
+  devices: 1
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: log
+      name: tfsepnet_device_a_single_test
+
+    # device_model_paths:
+    #   a: Zhou_XJTLU_task1_1/log_ckpt/device_a-val_acc=0.6761.ckpt
+    #   b: Zhou_XJTLU_task1_1/log_ckpt/device_b-val_acc=0.6036.ckpt
+    #   c: Zhou_XJTLU_task1_1/log_ckpt/device_c-val_acc=0.6191.ckpt
+    #   s1: Zhou_XJTLU_task1_1/log_ckpt/device_s1-val_acc=0.5830.ckpt
+    #   s2: Zhou_XJTLU_task1_1/log_ckpt/device_s2-val_acc=0.5679.ckpt
+    #   s3: Zhou_XJTLU_task1_1/log_ckpt/device_s3-val_acc=0.5991.ckpt
+    #   unknown: Zhou_XJTLU_task1_1/log_ckpt/device_unknown-val_acc=0.5849.ckpt
+model:
+  class_path: model.lit_asc.LitMultiDeviceInference
+  init_args:
+  
+    # test for the specific device with its ckpt
+    device_model_paths:
+       # device_model_paths:
+    #   a: Zhou_XJTLU_task1_1/log_ckpt/device_a-val_acc=0.6761.ckpt
+    #   b: Zhou_XJTLU_task1_1/log_ckpt/device_b-val_acc=0.6036.ckpt
+    #   c: Zhou_XJTLU_task1_1/log_ckpt/device_c-val_acc=0.6191.ckpt
+    #   s1: Zhou_XJTLU_task1_1/log_ckpt/device_s1-val_acc=0.5830.ckpt
+    #   s2: Zhou_XJTLU_task1_1/log_ckpt/device_s2-val_acc=0.5679.ckpt
+    #   s3: Zhou_XJTLU_task1_1/log_ckpt/device_s3-val_acc=0.5991.ckpt
+    #   unknown: Zhou_XJTLU_task1_1/log_ckpt/device_unknown-val_acc=0.5849.ckpt
+
+    # backbone
+    backbone_config:
+      _target_: model.backbones.TFSepNet
+      in_channels: 1
+      num_classes: 10
+      base_channels: 64
+      depth: 17
+      load_classifier: true
+      freeze_backbone: false
+    
+    spec_extractor_config:
+      _target_: util.CpMel
+      n_mels: 512
+    
+    class_label: scene
+    domain_label: device
+
+data:
+  class_path: data.data_module.DCASEDataModule 
+  init_args:
+    target_devices: ['a']  # only a
+    meta_dir: data/meta_dcase_2024
+    audio_dir: ../TAU-urban-acoustic-scenes-2022-mobile-development/TAU-urban-acoustic-scenes-2022-mobile-development
+    batch_size: 256
+    num_workers: 8
+    pin_memory: true
+    sampling_rate: 32000
+    test_subset: test

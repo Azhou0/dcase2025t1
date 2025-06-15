@@ -1,0 +1,49 @@
+### Multi-Device TF-SepNet Evaluation for Official Test Set ###
+
+trainer:
+  devices: 1
+  logger:
+    class_path: lightning.pytorch.loggers.TensorBoardLogger
+    init_args:
+      save_dir: log
+      name: tfsepnet_multi_device_evaluation
+
+model:
+  class_path: model.lit_asc.LitMultiDeviceInference
+  init_args:
+    # 各设备对应的模型检查点路径
+    device_model_paths:
+      a: /gpfs/work/int/yiqiangcai21/dcase1/easy_dcase_task1-main/log/tfsepnet_kd_a/version_5/checkpoints/epoch=367-val_acc=0.6761.ckpt
+      b: /gpfs/work/int/yiqiangcai21/dcase1/easy_dcase_task1-main/log/tfsepnet_kd_b/version_5/checkpoints/epoch=167-val_acc=0.6036.ckpt
+      c: /gpfs/work/int/yiqiangcai21/dcase1/easy_dcase_task1-main/log/tfsepnet_kd_c/version_0/checkpoints/epoch=167-val_acc=0.6191.ckpt
+      s1: /gpfs/work/int/yiqiangcai21/dcase1/easy_dcase_task1-main/log/tfsepnet_kd_s1/version_0/checkpoints/epoch=162-val_acc=0.5830.ckpt
+      s2: /gpfs/work/int/yiqiangcai21/dcase1/easy_dcase_task1-main/log/tfsepnet_kd_s2/version_0/checkpoints/epoch=146-val_acc=0.5679.ckpt
+      s3: /gpfs/work/int/yiqiangcai21/dcase1/easy_dcase_task1-main/log/tfsepnet_kd_s3/version_0/checkpoints/epoch=169-val_acc=0.5991.ckpt
+      unknown: /gpfs/work/int/yiqiangcai21/dcase1/easy_dcase_task1-main/log/tfsepnet_kd_unknown/version_5/checkpoints/epoch=252-val_acc=0.5849.ckpt
+
+    # 主干网络配置
+    backbone_config:
+      _target_: model.backbones.TFSepNet
+      in_channels: 1
+      num_classes: 10
+      base_channels: 64
+      depth: 17
+    
+    # 频谱提取器配置
+    spec_extractor_config:
+      _target_: util.CpMel
+      n_mels: 512
+    
+    class_label: scene
+    domain_label: device
+
+data:
+  class_path: data.data_module.DCASEDataModule
+  init_args:
+    meta_dir: /gpfs/work/int/yiqiangcai21/dcase1/dcase2025/TAU-urban-acoustic-scenes-2025-mobile-evaluation/evaluation_setup
+    audio_dir: /gpfs/work/int/yiqiangcai21/dcase1/dcase2025/TAU-urban-acoustic-scenes-2025-mobile-evaluation
+    batch_size: 64
+    num_workers: 4
+    pin_memory: true
+    sampling_rate: 32000
+    predict_subset: test  # 使用test.csv文件
