@@ -1,3 +1,28 @@
-# dcase2025t1
-This is the repo for Ziyang's dcase2025 submission 
+# DCASE 2025 Task 1 - Acoustic Scene Classification
 
+This repository contains Ziyang Zhou's submission for the DCASE 2025 Task 1 challenge on acoustic scene classification.
+
+## Installation
+
+First, install all required dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+### 1. Data Preparation
+Adjust the meta and audio directories in the tfsepnet_multi_device_evaluation.yaml configuration file to point to your data locations:
+
+data:
+  class_path: data.data_module.DCASEDataModule
+  init_args:
+    meta_dir: ../TAU-urban-acoustic-scenes-2025-mobile-evaluation/evaluation_setup
+    audio_dir: ../TAU-urban-acoustic-scenes-2025-mobile-evaluation
+
+### 2. Running Inference
+To run inference using the TF-SepNet multi-device evaluation model:
+
+```bash
+python main.py predict--config config/tfsepnet_multi_device_evaluation.yaml
+```
