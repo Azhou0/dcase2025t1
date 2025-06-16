@@ -1,5 +1,5 @@
 from util.callback import OverrideEpochStepCallback, FreezeEncoderFinetuneClassifier, \
-    PredictionWriter, PostTrainingQuantization, PostTrainingQuantization_old
+    PredictionWriter
 from util.data_augmentation import MixUp, SoftMixUp, FreqMixStyle, SpecAugmentation, DeviceImpulseResponseAugmentation, _DataAugmentation
 from util.result_analysis import make_markdown_table, ClassificationSummary
 from util.spec_extractor import CpMel, BEATsMel, Cnn3Mel, _SpecExtractor
@@ -13,8 +13,6 @@ __all__ = ["CpMel",
            "OverrideEpochStepCallback",
            "FreezeEncoderFinetuneClassifier",
            "PredictionWriter",
-           "PostTrainingQuantization",
-           "PostTrainingQuantization_old",
            "unique_labels",
            "_DataAugmentation",
            "MixUp",

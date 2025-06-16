@@ -8,12 +8,6 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from util import unique_labels
 from typing import Optional, List
-import os, csv
-from sklearn.preprocessing import MultiLabelBinarizer
-
-TARGET_SR   = 32_000          # 官方基线采样率
-SEG_LEN_SEC = 10
-N_CLASSES   = 527
 
 class AudioDataset(Dataset):
     """
@@ -110,7 +104,7 @@ class InferenceDataset(Dataset):
         self.subset = subset
         self.sr = sampling_rate
         
-        # 尝试不同的分隔符来读取CSV
+    
         csv_path = f"{self.meta_dir}/{self.subset}.csv"
         try:
             self.meta_subset = pd.read_csv(csv_path, sep='\t')
@@ -127,23 +121,19 @@ class InferenceDataset(Dataset):
         return len(self.meta_subset)
     
     def __getitem__(self, i):
-        # 获取第i行数据
+
         row_i = self.meta_subset.iloc[i]
-        # 获取音频文件名
         filename = row_i["filename"]
-        # 获取设备ID
         device_id = row_i["device_id"]
         
-        # 加载音频
         wav, _ = librosa.load(f"{self.audio_dir}/{filename}", sr=self.sr)
         wav = torch.from_numpy(wav)
         
-        # 编码设备标签
         try:
             if device_id in unique_labels['device']:
                 device_idx = unique_labels['device'].index(device_id)
             else:
-                # 将不在列表中的设备都归类为unknown
+                # unknown which not in the list
                 device_idx = unique_labels['device'].index('unknown') if 'unknown' in unique_labels['device'] else 0
             device_label = torch.from_numpy(np.array(device_idx, dtype=np.int64))
         except Exception as e:
@@ -155,19 +145,17 @@ class InferenceDataset(Dataset):
 
 class AudioEvaluationDataset(AudioDataset):
     """
-    专门用于官方评估的数据集，只包含音频和设备标签
+    For evaluate the evaluationset
     """
     def __getitem__(self, i):
         wav, filename = super().__getitem__(i)
         row = self.meta_subset.iloc[i]
         device_label = row['device_id'] if 'device_id' in row else 'unknown'
         
-        # 将设备标签编码为数字
         try:
             if device_label in unique_labels['device']:
                 device_idx = unique_labels['device'].index(device_label)
             else:
-                # 将不在列表中的设备都归类为unknown
                 device_idx = unique_labels['device'].index('unknown') if 'unknown' in unique_labels['device'] else 0
             device_label_tensor = torch.from_numpy(np.array(device_idx, dtype=np.int64))
         except Exception as e:
@@ -279,10 +267,8 @@ class DCASEDataModule(L.LightningDataModule):
                 .reset_index(drop=True)
             )
         if stage == "predict":
-            # 检查是否是新的推理格式（包含device_id列）
             csv_path = f"{self.meta_dir}/{self.predict_subset}.csv"
             try:
-                # 尝试不同的分隔符
                 try:
                     test_df = pd.read_csv(csv_path, sep='\t')
                 except:
@@ -294,7 +280,6 @@ class DCASEDataModule(L.LightningDataModule):
                 print(f"CSV columns: {list(test_df.columns)}")
                 
                 if 'device_id' in test_df.columns:
-                    # 这是新的推理格式，使用 InferenceDataset
                     print("Detected inference format with device_id column")
                     self.predict_set = InferenceDataset(
                         self.meta_dir, 
@@ -303,7 +288,6 @@ class DCASEDataModule(L.LightningDataModule):
                         sampling_rate=self.sampling_rate
                     )
                 else:
-                    # 常规预测格式
                     print("Using regular AudioDataset for prediction")
                     self.predict_set = AudioDataset(
                         self.meta_dir, 
@@ -352,7 +336,7 @@ class DCASEDataModule(L.LightningDataModule):
 
 class DCASEDataModuleByDevice(DCASEDataModule):
     """
-    优化版按设备过滤的数据模块
+    DeviceSpecific
     """
     def __init__(self, target_devices=None, exclude_devices=None, **kwargs):
         super().__init__(**kwargs)
@@ -383,7 +367,6 @@ class DCASEDataModuleByDevice(DCASEDataModule):
         print(f"{'='*50}")
         
         if stage == "fit":
-            # 1. 首先创建原始数据集来获取完整的meta信息
             temp_train_dataset = AudioLabelsDataset(
                 self.meta_dir, self.audio_dir, subset=self.train_subset, **self.kwargs
             )
@@ -394,26 +377,22 @@ class DCASEDataModuleByDevice(DCASEDataModule):
             original_train_meta = temp_train_dataset.meta_subset
             original_valid_meta = temp_valid_dataset.meta_subset
             
-            # 2. 过滤meta数据
             filtered_train_meta = self._filter_meta_by_device(original_train_meta)
             filtered_valid_meta = self._filter_meta_by_device(original_valid_meta)
             
             print(f"Train data: {len(original_train_meta)} -> {len(filtered_train_meta)} samples")
             print(f"Valid data: {len(original_valid_meta)} -> {len(filtered_valid_meta)} samples")
             
-            # 3. 处理teacher logits对齐（仅对训练集）
             aligned_train_logits = None
             if self.logits_files:
                 aligned_train_logits = self._create_filtered_logits(
                     original_train_meta, filtered_train_meta
                 )
             
-            # 4. 创建最终的数据集
             self.train_set = self._create_filtered_dataset_with_logits(
                 self.meta_dir, self.audio_dir, self.train_subset, aligned_train_logits
             )
             
-            # 验证集不需要logits
             self.valid_set = AudioLabelsDataset(
                 self.meta_dir, self.audio_dir, subset="valid", **self.kwargs
             )
@@ -456,7 +435,6 @@ class DCASEDataModuleByDevice(DCASEDataModule):
         print(f"Setup completed for stage: {stage}")
         
     def get_device_distribution(self, stage="train"):
-        """获取当前数据集的设备分布，用于调试"""
         if stage == "train" and hasattr(self, 'train_set'):
             meta = self.train_set.meta_subset
         elif stage == "valid" and hasattr(self, 'valid_set'):
