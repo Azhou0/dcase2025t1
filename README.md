@@ -28,7 +28,11 @@ or just put the data in the same place for the following test.
 To calculate the MACs and memory usage of the quantized model:
 
 ```bash
-python test_complexity.py
+python test_complexity.py --submission_name Zhou_XJTLU_task1 --submission_index 1 --dummy_file Zhou_XJTLU_task1/resources/dummy.wav 
+```
+or
+```bash
+python test_complexity_print.py
 ```
 ### 3. Running Inference
 To run inference using the TF-SepNet multi-device evaluation model(recommend):

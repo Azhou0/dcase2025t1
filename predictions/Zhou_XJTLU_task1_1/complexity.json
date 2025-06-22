@@ -2,57 +2,57 @@
   "per_device": {
     "a": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "b": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "c": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s1": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s2": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s3": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s4": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s5": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s6": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s7": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s8": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s9": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     },
     "s10": {
       "MACs": 29419648,
-      "Params": 507432
+      "Params": 125524
     }
   },
   "max_MACs": 29419648,
-  "max_Params": 507432
+  "max_Params": 125524
 }
