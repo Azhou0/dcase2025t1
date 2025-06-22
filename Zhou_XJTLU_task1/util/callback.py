@@ -10,9 +10,6 @@ from model.shared import ResNorm
 import torch.ao.quantization.observer as obs
 from torch.ao.quantization.fake_quantize import FakeQuantize
 from torch.ao.quantization.observer import ObserverBase
-from complexity import (
-    get_torch_macs_memory, MAX_MACS, MAX_PARAMS_MEMORY
-)
 from neural_compressor.torch.quantization import load
 
 class OverrideEpochStepCallback(pl.callbacks.Callback):

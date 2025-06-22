@@ -11,7 +11,7 @@ from lightning.pytorch.cli import OptimizerCallable, LRSchedulerCallable
 import torchinfo
 from util.static_variable import unique_labels
 from util import ClassificationSummary
-from .backbones import _BaseBackbone
+from model.backbones import _BaseBackbone
 from util.lr_scheduler import exp_warmup_linear_down
 from util import _SpecExtractor, ClassificationSummary, _DataAugmentation
 import numpy as np

@@ -20,15 +20,21 @@ data:
     meta_dir: ../TAU-urban-acoustic-scenes-2025-mobile-evaluation/evaluation_setup
     audio_dir: ../TAU-urban-acoustic-scenes-2025-mobile-evaluation
 
-### 2. Running Inference
-To run inference using the TF-SepNet multi-device evaluation model:
-
-```bash
-python evaluate_submission.py 
-```
-### 3. Calculate Complexity
+### 2. Calculate Complexity
 To calculate the MACs and memory usage of the quantized model:
 
 ```bash
 python test_complexity.py
 ```
+### 3. Running Inference
+To run inference using the TF-SepNet multi-device evaluation model(recommend):
+
+```bash
+cd Zhou_XJTLU_task1
+python test.py 
+```
+or 
+```bash
+python evaluate_submission.py 
+```
+and follow the instructions.

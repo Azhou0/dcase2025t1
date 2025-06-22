@@ -43,14 +43,33 @@ def get_model_size_bytes(model: torch.nn.Module) -> int:
     }
 
     total_bytes = 0
-    for param in model.parameters():
-        dtype = param.dtype
-        num_elements = param.numel()
-        bytes_per_param = dtype_to_bytes.get(dtype)
-
-        if bytes_per_param is None:
-            raise ValueError(f"Unsupported dtype: {dtype}. Please implement yourself.")
-
-        total_bytes += num_elements * bytes_per_param
+    
+    # 首先尝试使用state_dict（适用于量化模型）
+    if hasattr(model, 'state_dict'):
+        for param_name, param in model.state_dict().items():
+            if isinstance(param, torch.Tensor):
+                dtype = param.dtype
+                num_elements = param.numel()
+                bytes_per_param = dtype_to_bytes.get(dtype)
+                
+                if bytes_per_param is None:
+                    print(f"警告：未知的数据类型 {dtype}，使用默认值4字节")
+                    bytes_per_param = 4
+                    
+                total_bytes += num_elements * bytes_per_param
+                # 打印详细信息（可选）
+                # print(f"参数: {param_name}, 形状: {param.shape}, 类型: {dtype}, 大小: {num_elements * bytes_per_param} 字节")
+    else:
+        # 回退到使用parameters()方法
+        for param in model.parameters():
+            dtype = param.dtype
+            num_elements = param.numel()
+            bytes_per_param = dtype_to_bytes.get(dtype)
+            
+            if bytes_per_param is None:
+                print(f"警告：未知的数据类型 {dtype}，使用默认值4字节")
+                bytes_per_param = 4
+                
+            total_bytes += num_elements * bytes_per_param
 
     return total_bytes

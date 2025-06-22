@@ -1,9 +1,9 @@
 import torch
 import lightning as L
 from lightning.pytorch.loggers import TensorBoardLogger
-from Zhou_XJTLU_task1.model.backbones import TFSepNet
-from Zhou_XJTLU_task1.model.lit_asc import LitAcousticSceneClassificationSystem
-from Zhou_XJTLU_task1.data.data_module import DCASEDataModule
+from model.backbones import TFSepNet
+from model.lit_asc import LitAcousticSceneClassificationSystem
+from data.data_module import DCASEDataModule
 from util import CpMel
 import os
 import copy
@@ -243,7 +243,7 @@ def test_quantized_model():
     L.seed_everything(42)
     
     # Quantized model path - test with bias version first
-    quantized_model_path = "Zhou_XJTLU_task1/log_ckpt/best_model_quantized_bias.pt"
+    quantized_model_path = "ckpts/best_model_quantized_bias.pt"
     
     # Check if file exists
     if not os.path.exists(quantized_model_path):

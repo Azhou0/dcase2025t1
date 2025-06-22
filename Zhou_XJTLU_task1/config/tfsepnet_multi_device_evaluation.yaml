@@ -13,13 +13,13 @@ model:
   init_args:
     # 
     device_model_paths:
-      a: Zhou_XJTLU_task1_1/log_ckpt/device_a-val_acc=0.6761.ckpt
-      b: Zhou_XJTLU_task1_1/log_ckpt/device_b-val_acc=0.6036.ckpt
-      c: Zhou_XJTLU_task1_1/log_ckpt/device_c-val_acc=0.6191.ckpt
-      s1: Zhou_XJTLU_task1_1/log_ckpt/device_s1-val_acc=0.5830.ckpt
-      s2: Zhou_XJTLU_task1_1/log_ckpt/device_s2-val_acc=0.5679.ckpt
-      s3: Zhou_XJTLU_task1_1/log_ckpt/device_s3-val_acc=0.5991.ckpt
-      unknown: Zhou_XJTLU_task1_1/log_ckpt/device_unknown-val_acc=0.5849.ckpt
+      a: Zhou_XJTLU_task1_1/ckpts/device_a-val_acc=0.6761.ckpt
+      b: Zhou_XJTLU_task1_1/ckpts/device_b-val_acc=0.6036.ckpt
+      c: Zhou_XJTLU_task1_1/ckpts/device_c-val_acc=0.6191.ckpt
+      s1: Zhou_XJTLU_task1_1/ckpts/device_s1-val_acc=0.5830.ckpt
+      s2: Zhou_XJTLU_task1_1/ckpts/device_s2-val_acc=0.5679.ckpt
+      s3: Zhou_XJTLU_task1_1/ckpts/device_s3-val_acc=0.5991.ckpt
+      unknown: Zhou_XJTLU_task1_1/ckpts/device_unknown-val_acc=0.5849.ckpt
     #
     backbone_config:
       _target_: model.backbones.TFSepNet

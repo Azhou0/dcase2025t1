@@ -29,10 +29,10 @@ def get_model_size_bytes(model: torch.nn.Module, exclude_quantization_params=Tru
         for param_name, param in model.state_dict().items():
             if isinstance(param, torch.Tensor):
                 # Exclude quantization parameters
-                if exclude_quantization_params:
-                    # Check if parameter name contains quantization-related keywords
-                    if any(keyword in param_name for keyword in ['scale', 'zero_point']):
-                        continue
+                # if exclude_quantization_params:
+                #     # Check if parameter name contains quantization-related keywords
+                #     if any(keyword in param_name for keyword in ['scale', 'zero_point']):
+                #         continue
                 
                 dtype = param.dtype
                 num_elements = param.numel()
@@ -79,7 +79,7 @@ def get_torch_macs_memory_quantized(quantized_model, input_size):
 def analyze_quantized_model():
     """Analyze quantized model complexity"""
 
-    pt_path = "Zhou_XJTLU_task1/log_ckpt/best_model_quantized_bias.pt"
+    pt_path = "Zhou_XJTLU_task1/ckpts/best_model_quantized_bias.pt"
     try:
         # Load quantized state dictionary directly
         checkpoint = torch.load(pt_path, map_location='cpu')
@@ -113,7 +113,7 @@ def analyze_quantized_model():
                 print(f"  Found tensor: {param_name}, shape: {param.shape}, dtype: {param.dtype}")
                 
                 # Check if it should be filtered
-                filter_keywords = ['scale', 'zero_point', 'best_configure']
+                filter_keywords = []
                 is_filtered = any(keyword in param_name for keyword in filter_keywords)
                 
                 if is_filtered:
@@ -178,7 +178,7 @@ def analyze_quantized_model():
 
 def debug_model_structure():
     """Debug model structure and saved checkpoint"""
-    pt_path = "Zhou_XJTLU_task1/log_ckpt/best_model_quantized_bias.pt"
+    pt_path = "Zhou_XJTLU_task1/ckpts/best_model_quantized_bias.pt"
     
     # Check saved content
     checkpoint = torch.load(pt_path, map_location='cpu')
