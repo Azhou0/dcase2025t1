@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from model.classifiers import SingleLinearClassifier, ConvClassifier
-from model.shared import ConvBnRelu, ResNorm, AdaResNorm, BroadcastBlock, TimeFreqSepConvolutions
+from .classifiers import SingleLinearClassifier, ConvClassifier
+from .shared import ConvBnRelu, ResNorm, AdaResNorm, BroadcastBlock, TimeFreqSepConvolutions
 
 class _BaseBackbone(nn.Module):
     """ Base Module for backbones. """

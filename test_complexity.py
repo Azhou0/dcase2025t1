@@ -1,7 +1,7 @@
 import torch
 import torchinfo
 import copy
-from model.backbones import TFSepNet
+from Zhou_XJTLU_task1.model.backbones import TFSepNet
 from neural_compressor.utils.pytorch import load
 
 # Constants
@@ -79,7 +79,7 @@ def get_torch_macs_memory_quantized(quantized_model, input_size):
 def analyze_quantized_model():
     """Analyze quantized model complexity"""
 
-    pt_path = "log_ckpt/best_model_quantized_bias.pt"
+    pt_path = "Zhou_XJTLU_task1/log_ckpt/best_model_quantized_bias.pt"
     try:
         # Load quantized state dictionary directly
         checkpoint = torch.load(pt_path, map_location='cpu')
@@ -178,7 +178,7 @@ def analyze_quantized_model():
 
 def debug_model_structure():
     """Debug model structure and saved checkpoint"""
-    pt_path = "log_ckpt/best_model_quantized_bias.pt"
+    pt_path = "Zhou_XJTLU_task1/log_ckpt/best_model_quantized_bias.pt"
     
     # Check saved content
     checkpoint = torch.load(pt_path, map_location='cpu')
