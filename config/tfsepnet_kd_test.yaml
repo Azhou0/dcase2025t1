@@ -43,7 +43,7 @@ model:
 data:
   class_path: data.data_module.DCASEDataModule 
   init_args:
-    target_devices: ['a']  # only a
+    # target_devices: ['a']  # only a
     meta_dir: data/meta_dcase_2024
     audio_dir: ../TAU-urban-acoustic-scenes-2022-mobile-development/TAU-urban-acoustic-scenes-2022-mobile-development
     batch_size: 256

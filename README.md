@@ -24,5 +24,11 @@ data:
 To run inference using the TF-SepNet multi-device evaluation model:
 
 ```bash
-python main.py predict--config config/tfsepnet_multi_device_evaluation.yaml
+python evaluate_submission.py 
+```
+### 3. Calculate Complexity
+To calculate the MACs and memory usage of the quantized model:
+
+```bash
+python test_complexity.py
 ```

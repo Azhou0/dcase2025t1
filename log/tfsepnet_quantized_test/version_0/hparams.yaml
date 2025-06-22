@@ -1,0 +1,7 @@
+data_augmentation:
+  mix_up: null
+  mix_style: null
+  spec_aug: null
+  dir_aug: null
+class_label: scene
+domain_label: device
